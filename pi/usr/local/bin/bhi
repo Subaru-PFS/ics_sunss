@@ -1,0 +1,4 @@
+#!/bin/bash
+
+gpio write 2 1
+gpio write 3 0

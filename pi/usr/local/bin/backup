@@ -1,0 +1,1 @@
+cp $1 /scr0/Backups/$1.`datestr`

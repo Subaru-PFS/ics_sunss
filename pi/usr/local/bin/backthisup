@@ -1,0 +1,4 @@
+#!/bin/bash
+# backs up /usr/local/bin/ to /scr0/usr/local/bin/, which is nonvolatile
+
+sudo rsync -avxu --delete /usr/local/bin/ /scr0/usr/local/bin/

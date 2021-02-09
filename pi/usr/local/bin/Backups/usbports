@@ -1,0 +1,25 @@
+# script to find the usb port designations for hidraw0 and 1
+# /boot/usbports must exist, which means that you must have
+# run findusbports
+
+i0=`udevadm info /dev/hidraw0 | fgrep DEVPATH`
+j0=${i0#*usb1/1-1/} 
+k0=${j0%%/*}
+dp[0]=$k0
+echo /dev/hidraw0 is port $k0
+p0=`fgrep $k0 /boot/usbports`
+echo "p0 = $p0"
+export hid0p=${p0%=*}
+echo "hid0p = |$hid0p|"
+
+
+
+i1=`udevadm info /dev/hidraw1 | fgrep DEVPATH` 
+j1=${i1#*usb1/1-1/}
+k1=${j1%%/*}
+dp[1]=$k1
+echo /dev/hidraw1 is port $k1
+p1=`fgrep $k1 /boot/usbports`
+echo "p1 = $p1"
+export hid1p=${p1%=*}
+echo "hid1p = |$hid1p|"

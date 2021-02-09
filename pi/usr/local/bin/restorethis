@@ -1,0 +1,4 @@
+#!/bin/bash
+# restores /usr/local/bin from nonvolatile copy at /scr0/usr/local/bin
+
+sudo rsync -avxu /scr0/usr/local/bin/ /usr/local/bin/

@@ -1,0 +1,2 @@
+#!/bin/bash
+gcc rot1.c rotat.c -o rot1 -lm

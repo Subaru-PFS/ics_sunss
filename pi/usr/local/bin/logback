@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# script to backup /tmp/sunsslog to nonvolatile storage on /scr0
+
+sudo cat /tmp/sunsslog >> /tmp/alllog
+sudo cp -p /tmp/sunsslog /scr0/Sunsslogs/sunsslog.`datestr`_`timestr`

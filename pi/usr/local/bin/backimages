@@ -1,0 +1,40 @@
+#!/bin/bash
+# makes three backup images in /scr0 on the USB drive. Name is pfssunss.N.img,
+# N=0,1,2, which should be identical.
+# NB!!!! Image size = 2000MiB is hardwired here
+
+base=/scr0/sunss
+
+
+
+if [ "`sysstate`" = "normal" ]
+then
+    echo "You must be in overlay mode to use this script. Say 'reboot' & start over"
+    exit
+fi
+
+if ! df | fgrep /scr0
+then
+    scr0mounted=false
+    mount /scr0
+    echo "Mounting /scr0"
+fi
+
+#delete the old set. Careful. You should have a named/dated backup
+rm -f $base.?.img
+
+i=0
+for i in 0 1 2
+do
+    echo "Writing $base.$i.img"
+    dd if=/dev/mmcblk0 of=$base.$i.img bs=1M count=2000 status=progress oflag=sync ; sync
+    let i=i+1
+done    
+
+if [ ! scr0mounted ]
+then
+    umount /scr0
+    echo "Umounting /scr0"
+fi
+
+

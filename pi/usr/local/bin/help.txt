@@ -1,0 +1,44 @@
+Wheel commands:
+
+linewheel *position* (1-5 or -1) 
+
+    positions the line filterwheel to the given position or does
+    a self-calibration sequence if position is given as -1
+
+qthwheel *position* (1-5 or -1)
+    
+    positions the continuum filterwheel to the given position or
+    does a self-calibration sequence if position is given as -1.
+
+In order that the system knows which filterwheel is which, it is
+necessary that they always be plugged into the same USB ports. The
+line wheel must be plugged into the upper left port looking at the
+face of the pi with the ethernet port on the far left. The QTH
+filterwheel must be plugged into the lower left port,
+
+ADC commands:
+
+adcraw *port* (1 or 2)
+
+    Echos the voltage on ADC port 1 or 2, which is about 50mV with no
+    input. It is offset from zero because the opamp, ostensibly with
+    rail-to-rail output, can only pull down to about 30 mV, and we offset
+    it so that it is still linear with zero input.
+
+adc *port* (1 or 2)
+
+    Echos the voltage on ADC port 1 or 2 corrected for the offset, which
+    must be calibrated for the supply voltage which generates the offset
+    and for the photodiode dark current. This is done by
+
+adccalib
+
+    Which takes several readings and averages with the integrating sphere 
+    dark (all lamps off) and saves it in two little files in the /boot 
+    partition, adccalib1 and adccalib2. This is the only write activity 
+    to the SD card in normal operation. This needs be done only occasionally, 
+    but probably should be done at the beginning of every session. Since 
+    it is necessary to turn the lamps off before executing it, it must be 
+    executed by some upper-level software which also controls the lamps.
+
+****************************************************************************

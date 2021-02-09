@@ -1,0 +1,41 @@
+#script to do many runits. if called with no args, does complete
+# script. If called with one parameter, "test", it runs a quick 
+# sequence with 1 ms ontime and zero interval
+
+params="1200 1500 2"   # 1800s in each direction, 1 hour per iteration, 1.5s/step
+suffix="_real"
+
+if [ "$1" = "test" ]  # do a quick runthrough
+then
+    params="1200 0 1"      # for testing
+    suffix="_test"
+fi
+
+logfile=/tmp/runlog`datestr`$suffix
+sudo mv $logfile ${logfile}.bak  
+
+date > $logfile
+
+trap "running=0; alloff; echo 'caught ^C' " SIGINT
+
+i=0
+
+running=1
+while [ $i -lt 6 ]
+do
+    if [ $running = 1 ]
+    then
+        echo "Forward:" >> $logfile
+        runit  $params | tee -a $logfile
+        sleep 2
+        rsync -avx $logfile jeg@telzey:temp/
+    fi
+    if [ $running = 1 ]
+    then
+        echo "Reverse:"
+        runit -$params | tee -a $logfile
+        sleep 2
+        rsync -avx $logfile jeg@telzey:temp/
+    fi
+    let i=i+1
+done

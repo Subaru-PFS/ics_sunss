@@ -1,0 +1,15 @@
+#!/bin/bash
+# sets the 'testing' state by creating /tmp/sunsstesting
+# the user has the responsibility to keep this going if necessary. it
+# turns off after 10 min without. A test proram lasting longer than that
+# needs to touch the testing file every few minutes at least.
+
+touch /tmp/sunsstesting
+while true
+do
+    sleep 600
+    if [ $((`date +%s` - `date -r /tmp/sunsstesting +%s`)) -gt 590 ]
+    then
+        sudo rm -f /tmp/sunsstesting
+    fi
+done

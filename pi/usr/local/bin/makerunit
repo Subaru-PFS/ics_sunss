@@ -1,0 +1,2 @@
+# makes runit
+gcc -Wall -o runit runit.c rotat.c motor.c -lwiringPi -lm

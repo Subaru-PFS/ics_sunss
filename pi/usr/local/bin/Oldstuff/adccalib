@@ -1,0 +1,45 @@
+#!/bin/bash
+# calibration routine for photodiodes for integrathing sphere.
+# the PDS are Thor SM05P1B, anode-grounded devices which have
+# a dark current of the order of 1 na. With a gain resistor of
+# 5M, this is a signal of about 5 mv. The offset is Vdd/100,
+# or about 50 mv. This routine determines the average dark signal,
+# which is the sum of these. We use bc to do decimal arithmetic
+# in bash.
+
+echo "Turn off all lamps so that the integrating sphere is dark."
+echo "When this is done, hit any key to continue"
+read i
+
+ad1="0.0"
+ad2="0.0"
+
+# get five values
+for i in 1 2 3 4 5
+do
+    adcz1=`adcraw 1`
+    adcz2=`adcraw 2`
+    ad1=`echo " $adcz1 + $ad1" | bc -l`
+    ad2=`echo " $adcz2 + $ad2" | bc -l`
+    sleep 1
+    echo "iteration $i z1=$adcz1  z2=$adcz2 "
+done
+
+# calculate the mean 
+adcz1=`echo "$ad1 / 5.0 " | bc -l`
+adcz2=`echo "$ad2 / 5.0 " | bc -l`
+
+# cut the string to manageable size
+adcz1=`echo ${adcz1:0:5}`
+adcz2=`echo ${adcz2:0:5}`
+
+# display the results
+echo
+echo "Zeros for channel 1, 2 = $adcz1, $adcz2"
+
+# store the results in little files in /boot/
+echo $adcz1 > /tmp/adccalib1
+echo $adcz1 > /tmp/adccalib2
+
+sudo cp /tmp/adccalib* /boot/
+

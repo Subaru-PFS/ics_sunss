@@ -1,0 +1,120 @@
+#!/bin/bash
+# monitor for system. If there is no runningfile, just issues alloff
+# command every second. If $runningfile exists, 
+# checks $logfile  's modification time; if the difference between now and 
+# that time is greater than 60 seconds, throws an error and kills the process. 
+# Every second it zeros all the ports if sunss() is not running and if
+# /tmp/sunsstesting does not exist
+#
+# This script is started at boot by crontab as root. We need a watchdog
+# process, probably, to watch the watchdog. Yes, configure the watchdog
+# to specifically check sunssmonitor.
+
+runningfile=/tmp/sunssrunning  # the sunss process is running
+testingfile=/tmp/sunsstesting  # test mode is on
+busyfile=/tmp/sunssbusy        # Motor is being run--some port can be high 
+logfile=/tmp/sunsslog          # log file for this run
+monlogfile=/tmp/sunssmonlog    # monitor log
+alllogfile=/tmp/alllog         # cumulative log file
+gofile=/tmp/sunssgo            # flag file for starting suns
+process=sunss
+
+
+echo "sunssmonitor: BASHPID = $BASHPID" 
+echo $BASHPID > /tmp/sunssmonitorpid
+
+touch /tmp/sunsslog
+chown pfs:pfs /tmp/sunsslog
+
+i=`cat /etc/passwd | fgrep pfs`
+j=${i#*x:}
+pfsuid=${j%%:*}
+echo $pfsuid > /tmp/pfsuid
+
+
+iter=0
+while true
+do
+    # if we get a signal to start, start and then erase the gofile
+    if [ -e $gofile ]
+    then
+        i=`cat $gofile`
+        if ! pgrep -x sunss 
+        then
+            cat $logfile >> $alllogfile
+            rm -f $logfile
+            touch $logfile
+            sudo chown pfs:pfs $logfile $alllogfile
+            sudo -u pfs sunss $i &
+            sleep 2
+        else
+            /* sunss is already running. Do not touch it, but make
+             * a logfile entry
+             */
+            echo "`date` An instance of sunss is already running" >> $monlogfile
+            echo "To stop it, say 'stop' " >> $monlogfile
+        fi
+
+        # This does not work without the sudo??
+        echo -n "`date`: removing $gofile as `whoami`:" >> $monlogfile
+        if sudo /bin/rm -f $gofile
+        then
+            echo "  done" >> $monlogfile
+        else
+            echo "  couldna delete it" >> $monlogfile
+        fi
+
+    fi
+    # if sunss is running, check twice a minute to make sure that the log 
+    # is being written to; otherwise panic and kill sunss process
+    while [ -e $runningfile ]
+    do
+        # check that the log has been written to in the last half minute
+        if [ $((`date +%s` - `date -r $logfile +%s`)) -gt 60 ]
+        then            
+            echo "SUNSS is not responding properly. killing" >> $logfile
+            echo "`date`: SUNSS is not responding properly. killing" >> $monlogfile
+            rm -f /tmp/$runningfile
+            rm -f /tmp/$gofile
+            sleep 2
+            /usr/local/bin/alloff
+            sleep 2
+            pkill -x sunss
+        fi
+        # check if the busyfile is indicating busy that that state
+        # has not lasted more than 30 sec, which indicates a stuck
+        # motor state.
+
+        if [ -e $busyfile ] 
+        then
+            stat=`cat $busyfile`
+            if [ "$stat" == "1" ]
+            then
+                if [ $((`date +%s` - `date -r $busyfile +%s`)) -gt 30 ]
+                then
+                    echo "Busy is stuck on. Killing sunss" >> $logfile
+                    echo "`date`:Busy is stuck on. Killing sunss" >> $monlogfile
+                    sudo rm -f $runningfile
+                    sudo rm -f $gofile
+                    sleep 2
+                    /usr/local/bin/alloff
+                    sleep 2
+                    pkill -x sunss
+                fi
+            fi
+        fi
+
+
+        # go around again in half a minute
+        sleep 30
+    done
+    # if we are not testing and not running, turn off all the ports
+    # once a second
+    if [ ! -e $testingfile ]
+    then
+        /usr/local/bin/alloff    
+    fi
+    let iter=iter+1
+    # check every second
+    /bin/sleep 1
+done

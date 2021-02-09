@@ -1,0 +1,1 @@
+cc allset.c motor.c -oallset -lwiringPi

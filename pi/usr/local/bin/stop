@@ -1,0 +1,6 @@
+#!/bin/bash
+
+sudo rm -f /tmp/sunssrunning
+sudo rm -f /tmp/sunssgo
+sleep 2
+sudo pkill -x sunss

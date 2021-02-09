@@ -1,0 +1,54 @@
+#!/bin/bash
+# this script is to be sourced, and populates the environment variables
+# HID0PORT  and  HID1PORT with UL, UR, LL, LR
+
+# udev port designation
+# NB!!! this is NOT robust--depends in detail on revision on Pi,
+# must be experimentally determined.
+# export PORTS=('1-1.1.2:' '1-1.1.3:' '1-1.3:' '1-1.2:')  # one version
+export PORTS=('1-1.2:' '1-1.3:' '1-1.4:' '1-1.5:') #another
+
+# location on Pi
+export PLOC=("UL" "LL" "UR" "LR")
+
+devno=("-1" "-1" "-1 " "-1")
+
+# ul='1-1.1.2:'
+# ll='1-1.1.3:'
+# ur='1-1.3:'
+# lr='1-1.2:'
+
+HID0PORT=
+HID1PORT=
+
+            dev0=/dev/hidraw0
+dev1=/dev/hidraw1
+
+for did in 0 1
+do
+    dev=/dev/hidraw$did
+    if [ -e $dev ]
+    then
+        for port in 0 1 2 3
+        do
+            
+            if udevadm info $dev | fgrep ${PORTS[$port]} >& /dev/null 
+            then
+                devno[$port]=$did
+                if [ "$did" = "0" ]
+                then 
+                    HID0PORT="${PLOC[$port]}"
+                    echo "HID0PORT = $HID0PORT"
+                    export HID0PORT
+                else
+                    HID1PORT="${PLOC[$port]}" 
+                    echo "HID1PORT = $HID1PORT"
+                    export HID1PORT
+                fi
+            fi
+        done
+    fi
+done
+export devno
+
+
