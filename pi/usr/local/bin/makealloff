@@ -1,1 +1,1 @@
-cc alloff.c motor.c -oalloff -lwiringPi
+cc alloff.c motor.c -oalloff -lwiringPi -lpthread -lrt -lcrypt -lm

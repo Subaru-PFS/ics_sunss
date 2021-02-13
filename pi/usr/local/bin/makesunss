@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gcc -Wall -o sunss sunss.c motor.c rotat.c -lwiringPi -lm
+gcc -Wall -o sunss sunss.c motor.c rotat.c -lwiringPi -lpthread -lrt -lcrypt -lm
