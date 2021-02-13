@@ -27,7 +27,7 @@ class SunssState:
             with open(self.BUSY_FILE, "r") as busyFile:
                 state = busyFile.readline()
         except FileNotFoundError:
-            return False
+            return 0
 
         return int(state)
 
@@ -117,7 +117,7 @@ class SunssServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 def run():
     state = SunssState()
-    ip, port = '127.0.0.1', 1024
+    ip, port = '', 1024
     with SunssServer((ip, port), SunssRequestHandler, sunssState=state) as server:
         # Start a thread with the server -- that thread will then start one
         # more thread for each request
