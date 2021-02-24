@@ -20,7 +20,26 @@ class SunssState:
         pass
 
     def isRunning(self):
-        return int(os.path.exists(self.RUNNING_FILE))
+        try:
+            # Grab last line of file
+            with open(self.RUNNING_FILE, "r") as runningFile:
+                state = 'time=0 steppos=-1'
+                while True:
+                    newState = runningFile.readline()
+                    if not newState:
+                        break
+                    state = newState
+        except FileNotFoundError:
+            return 0, 0, -1
+
+        try:
+            tsStr, stepsStr = state.strip().split()
+            ts = tsStr.split('=')[-1]
+            steps = stepsStr.split('=')[-1]
+        except Exception as e:
+            return 0, 0, -1
+
+        return 1, ts, steps
 
     def isBusy(self):
         try:
@@ -37,7 +56,7 @@ class SunssState:
         This can involve homing the telescope. Not sure when that happens. Takes a few seconds.
         """
 
-        maxTime = 10
+        maxTime = 15
         loopTime = 0.25
 
         t0 = time.time()
@@ -51,7 +70,9 @@ class SunssState:
             time.sleep(loopTime)
 
     def status(self):
-        return self.isRunning(), self.isBusy()
+        stat = list(self.isRunning())
+        stat.append(self.isBusy())
+        return stat
 
     def stop(self):
         try:
@@ -105,7 +126,7 @@ class SunssRequestHandler(socketserver.BaseRequestHandler):
         elif cmdName == 'status':
             ret = self.sunssState.status()
 
-        response = f'{ret[0]} {ret[1]}\n'
+        response = f'{" ".join([str(x) for x in ret])}\n'
         self.request.sendall(response.encode('latin-1'))
 
 class SunssServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
